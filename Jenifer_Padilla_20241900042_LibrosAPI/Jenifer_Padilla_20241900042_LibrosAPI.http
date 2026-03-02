@@ -1,0 +1,6 @@
+@Jenifer_Padilla_20241900042_LibrosAPI_HostAddress = http://localhost:5032
+
+GET {{Jenifer_Padilla_20241900042_LibrosAPI_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
