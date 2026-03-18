@@ -1,71 +1,93 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Jenifer_Padilla_20241900042_LibrosAPI.Entities;
-using Jenifer_Padilla_20241900042_LibrosAPI.Features.Libros;
+using Jenifer_Padilla_20241900042_LibrosAPI.Features.Libros.Dtos;
+using Jenifer_Padilla_20241900042_LibrosAPI.Features.Libros.Interfaces;
+using Jenifer_Padilla_20241900042_LibrosAPI.Infraestructure.Interfaces;
+using Jenifer_Padilla_20241900042_LibrosAPI.Commons.Models;
 
 namespace Jenifer_Padilla_20241900042_LibrosAPI.Controllers
 {
-    [ApiController]
     [Route("api/[controller]")]
-
+    [ApiController]
     public class LibrosController : ControllerBase
     {
-        private readonly LibrosAppService librosAppService;
-        public LibrosController(LibrosAppService librosAppService)
+        private readonly ILibrosAppService librosAppService;
+
+        public LibrosController(ILibrosAppService librosAppService)
         {
             this.librosAppService = librosAppService;
         }
 
-        // Endpoint para listar todas los libros
-        [HttpGet("EnlistarLibros")]
-        
-        public IActionResult ObtenerTodos()
+        [HttpGet]
+        public async Task<IActionResult> ObtenerLibros()
         {
-            List<Libro> libros = librosAppService.ObtenerTodos();
+            List<Libro> libros =
+                await librosAppService.ObtenerLibros();
+
             return Ok(libros);
         }
 
-        // Endpoint para enlistar libros por autor
         [HttpGet]
-        [Route("ListarLibrosPorAutor")]
-        public IActionResult ListarLibrosPorAutor()
+        [Route("ObtenerLibrosParaUsuario")]
+        public async Task<IActionResult> ObtenerLibrosParaUsuario()
         {
-            return Ok("Libros por autor");
+            List<LibroDto> libroDtos =
+                await librosAppService.ObtenerLibrosParaUsuario();
+
+            return Ok(libroDtos);
         }
 
-        // Endpoint para obtener un libro por su id
-        [HttpGet("{id}")]
-        public IActionResult ObtenerPorId(int id)
+        [HttpGet]
+        [Route("{id}")]
+        public async Task<IActionResult> ObtenerLibroPorId([FromRoute] int id)
         {
-            return Ok(librosAppService.ObtenerPorId(id));
+            Libro libro =
+                await librosAppService.ObtenerLibroPorId(id);
+
+            if (libro == null)
+                return NotFound(new ApiResponse<Libro>
+                {
+                    Success = false,
+                    Message = "Libro no encontrado",
+                    Data = null
+                });
+
+            return Ok(libro);
         }
 
-        // Endpoint para agregar un nuevo libro
         [HttpPost]
-        [Route("AgregarLibro")]
-       
-        public IActionResult AgregarLibro([FromBody] Libro libro)
+        public async Task<IActionResult> GuardarLibro(
+            [FromBody] Libro libro)
         {
-            librosAppService.AgregarLibro(libro);
-            return Ok("Libro agregado correctamente.");
+            var respuesta = await librosAppService.GuardarLibro(libro);
+            return Ok(respuesta);
         }
 
-        // Endpoint para actualizar un libro existente
         [HttpPut]
-        [Route("ActualizarLibro")]
-        public IActionResult ActualizarLibro([FromBody] Libro libro)
+        public async Task<IActionResult> ActualizarLibro(
+            [FromBody] Libro libro)
         {
-            librosAppService.ActualizarLibro(libro);
-            return Ok("Libro agregado correctamente");
+            await librosAppService.ActualizarLibro(libro);
+            return Ok(new ApiResponse<Libro>
+            {
+                Success = true,
+                Message = "Libro actualizado correctamente",
+                Data = libro
+            });
         }
 
-        // Endpoint para borrar un libro existente
-        [HttpDelete("{id}")]
-        public IActionResult Eliminar(int id)
-        
+        [HttpDelete]
+        [Route("{id}")]
+        public async Task<IActionResult> InactivarLibro([FromRoute] int id)
         {
-            librosAppService.Eliminar(id);
-            return Ok("Libro eliminado correctamente");
+            await librosAppService.InactivarLibro(id);
+            return Ok(new ApiResponse<object>
+            {
+                Success = true,
+                Message = "Registro inactivado correctamente",
+                Data = null
+            });
         }
     }
 }
